@@ -1,14 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
-
 import {Strings} from "@openzeppelin-contracts-5.0.1/utils/Strings.sol";
-import {Prover} from "vlayer-0.1.0/src/Prover.sol";
-import {VerifiedEmail, UnverifiedEmail, EmailProofLib} from "vlayer-0.1.0/src/EmailProof.sol";
-import {EmailStrings} from "./EmailStrings.sol";
+
+import {Proof} from "vlayer-0.1.0/Proof.sol";
+import {Prover} from "vlayer-0.1.0/Prover.sol";
+import {RegexLib} from "vlayer-0.1.0/Regex.sol";
+import {VerifiedEmail, UnverifiedEmail, EmailProofLib} from "vlayer-0.1.0/EmailProof.sol";
+
+import {AddressParser} from "./utils/AddressParser.sol";
 
 contract ZuCitizenshipRegistry is Prover {
     using Strings for string;
-    using EmailStrings for string;
+    using RegexLib for string;
+    using AddressParser for string;
     using EmailProofLib for UnverifiedEmail;
 
     // Struct to store citizen information
@@ -40,13 +44,17 @@ contract ZuCitizenshipRegistry is Prover {
     ) public view returns (Proof, bytes32, address) {
         VerifiedEmail memory email = unverifiedEmail.verify();
 
-        require(email.from.contains(targetDomain), "incorrect sender domain");
         require(
-            email.subject.equal(
-                "[POAP Inside] Thanks for hacking at ETHGlobal Singapore 2024!"
-            ),
-            "incorrect subject"
+            email.from.matches("^.*@ethglobal.com$"),
+            "from must be a ethglobal address"
         );
+
+        // require(
+        //     email.subject.equal(
+        //         "[POAP Inside] Thanks for hacking at ETHGlobal Singapore 2024!"
+        //     ),
+        //     "incorrect subject"
+        // );
 
         return (proof(), sha256(abi.encodePacked(email.from)), targetWallet);
     }
