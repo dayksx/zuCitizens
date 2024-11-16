@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
-import {Strings} from "@openzeppelin-contracts-5.0.1/utils/Strings.sol";
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ISP} from "@ethsign/sign-protocol-evm/src/interfaces/ISP.sol";
@@ -8,18 +7,13 @@ import {ISPHook} from "@ethsign/sign-protocol-evm/src/interfaces/ISPHook.sol";
 import {Attestation} from "@ethsign/sign-protocol-evm/src/models/Attestation.sol";
 import {DataLocation} from "@ethsign/sign-protocol-evm/src/models/DataLocation.sol";
 
-import {Proof} from "vlayer-0.1.0/Proof.sol";
-import {Prover} from "vlayer-0.1.0/Prover.sol";
-import {RegexLib} from "vlayer-0.1.0/Regex.sol";
-import {VerifiedEmail, UnverifiedEmail, EmailProofLib} from "vlayer-0.1.0/EmailProof.sol";
+import { Verifier } from "vlayer-0.1.0/Verifier.sol";
+import { ZuCitizenshipRegistryProver } from "ZuCitizenshipRegistryProver.sol";
 
-import {AddressParser} from "./utils/AddressParser.sol";
+address constant PROVER_ADDR = address(0xd7141F4954c0B082b184542B8b3Bd00Dc58F5E05);
+bytes4 constant  PROVER_FUNC_SELECTOR = ZuCitizenshipRegistryProver.main.selector;
 
-contract ZuCitizenshipRegistryWithAttestation is Prover, ISPHook {
-    using Strings for string;
-    using RegexLib for string;
-    using AddressParser for string;
-    using EmailProofLib for UnverifiedEmail;
+contract ZuCitizenshipRegistryWithAttestation is Verifier, ISPHook {
 
     ISP public spInstance;
     uint64 public schemaId;
@@ -49,12 +43,6 @@ contract ZuCitizenshipRegistryWithAttestation is Prover, ISPHook {
     event IdentityAdded(address indexed citizen, address identity);
     event IdentityRemoved(address indexed citizen, address identity);
 
-    // string targetDomain;
-
-    // constructor(string memory _targetDomain) {
-    //    targetDomain = _targetDomain;
-    // }
-
     event Invited(address indexed inviter, address invitee);
     constructor() Ownable(_msgSender()) {}
 
@@ -67,12 +55,18 @@ contract ZuCitizenshipRegistryWithAttestation is Prover, ISPHook {
     }
 
     // function for the contract owner to mark an address as registered citizen
-    function registerCitizen(address _citizen, uint256 _expiration) external onlyOwner {
-        _registerCitizen(_citizen, _expiration)
+    function registerCitizenByOwner(address _citizen, uint256 _expiration) external onlyOwner {
+        _registerCitizen(_citizen, _expiration);
+    }
+    
+    // function for the contract owner to mark an address as registered citizen
+    function registerCitizen(Proof _p, address _citizen, uint256 _expiration) external onlyVerified(PROVER_ADDR, PROVER_FUNC_SELECTOR) {
+        _registerCitizen(_citizen, _expiration);
     }
 
     function inviteCitizen(
-        address _inviteeAddress
+        address _inviteeAddress,
+        uint256 _expiration
     ) external returns (uint64) {
         require(citizens[_msgSender()].isCitizen, "Inviter is not a citizen");
 
@@ -115,7 +109,7 @@ contract ZuCitizenshipRegistryWithAttestation is Prover, ISPHook {
         );
         address invitee = abi.decode(attestation.recipients[0], (address));
 
-        _registerCitizen(invitee, block.timestamp + 10 years)
+        _registerCitizen(invitee, block.timestamp + 10 years);
     }
 
     function didReceiveAttestation(
