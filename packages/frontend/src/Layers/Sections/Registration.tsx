@@ -16,7 +16,10 @@ declare global {
   }
 }
 
-const zuRegistryAbi: any = [{"type":"function","name":"main","inputs":[{"name":"unverifiedEmail","type":"tuple","internalType":"struct UnverifiedEmail","components":[{"name":"email","type":"string","internalType":"string"},{"name":"dnsRecords","type":"string[]","internalType":"string[]"}]},{"name":"targetWallet","type":"address","internalType":"address"}],"outputs":[{"name":"","type":"tuple","internalType":"struct Proof","components":[{"name":"seal","type":"tuple","internalType":"struct Seal","components":[{"name":"verifierSelector","type":"bytes4","internalType":"bytes4"},{"name":"seal","type":"bytes32[8]","internalType":"bytes32[8]"},{"name":"mode","type":"uint8","internalType":"enum ProofMode"}]},{"name":"callGuestId","type":"bytes32","internalType":"bytes32"},{"name":"length","type":"uint256","internalType":"uint256"},{"name":"callAssumptions","type":"tuple","internalType":"struct CallAssumptions","components":[{"name":"proverContractAddress","type":"address","internalType":"address"},{"name":"functionSelector","type":"bytes4","internalType":"bytes4"},{"name":"settleBlockNumber","type":"uint256","internalType":"uint256"},{"name":"settleBlockHash","type":"bytes32","internalType":"bytes32"}]}]},{"name":"","type":"bytes32","internalType":"bytes32"},{"name":"","type":"address","internalType":"address"}],"stateMutability":"view"},{"type":"function","name":"proof","inputs":[],"outputs":[{"name":"","type":"tuple","internalType":"struct Proof","components":[{"name":"seal","type":"tuple","internalType":"struct Seal","components":[{"name":"verifierSelector","type":"bytes4","internalType":"bytes4"},{"name":"seal","type":"bytes32[8]","internalType":"bytes32[8]"},{"name":"mode","type":"uint8","internalType":"enum ProofMode"}]},{"name":"callGuestId","type":"bytes32","internalType":"bytes32"},{"name":"length","type":"uint256","internalType":"uint256"},{"name":"callAssumptions","type":"tuple","internalType":"struct CallAssumptions","components":[{"name":"proverContractAddress","type":"address","internalType":"address"},{"name":"functionSelector","type":"bytes4","internalType":"bytes4"},{"name":"settleBlockNumber","type":"uint256","internalType":"uint256"},{"name":"settleBlockHash","type":"bytes32","internalType":"bytes32"}]}]}],"stateMutability":"pure"},{"type":"function","name":"registerCitizen","inputs":[{"name":"_citizen","type":"address","internalType":"address"},{"name":"_expiration","type":"uint256","internalType":"uint256"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"setBlock","inputs":[{"name":"blockNo","type":"uint256","internalType":"uint256"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"setChain","inputs":[{"name":"chainId","type":"uint256","internalType":"uint256"},{"name":"blockNo","type":"uint256","internalType":"uint256"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"event","name":"CitizenRegistered","inputs":[{"name":"citizen","type":"address","indexed":true,"internalType":"address"},{"name":"expiration","type":"uint256","indexed":false,"internalType":"uint256"}],"anonymous":false},{"type":"event","name":"CitizenshipRevoked","inputs":[{"name":"citizen","type":"address","indexed":true,"internalType":"address"}],"anonymous":false},{"type":"event","name":"IdentityAdded","inputs":[{"name":"citizen","type":"address","indexed":true,"internalType":"address"},{"name":"identity","type":"address","indexed":false,"internalType":"address"}],"anonymous":false},{"type":"event","name":"IdentityRemoved","inputs":[{"name":"citizen","type":"address","indexed":true,"internalType":"address"},{"name":"identity","type":"address","indexed":false,"internalType":"address"}],"anonymous":false},{"type":"error","name":"FailedInnerCall","inputs":[]}];
+const zuRegistryProverAbi: any = [{"type":"function","name":"main","inputs":[{"name":"unverifiedEmail","type":"tuple","internalType":"struct UnverifiedEmail","components":[{"name":"email","type":"string","internalType":"string"},{"name":"dnsRecords","type":"string[]","internalType":"string[]"}]},{"name":"owner","type":"address","internalType":"address"}],"outputs":[{"name":"","type":"tuple","internalType":"struct Proof","components":[{"name":"seal","type":"tuple","internalType":"struct Seal","components":[{"name":"verifierSelector","type":"bytes4","internalType":"bytes4"},{"name":"seal","type":"bytes32[8]","internalType":"bytes32[8]"},{"name":"mode","type":"uint8","internalType":"enum ProofMode"}]},{"name":"callGuestId","type":"bytes32","internalType":"bytes32"},{"name":"length","type":"uint256","internalType":"uint256"},{"name":"callAssumptions","type":"tuple","internalType":"struct CallAssumptions","components":[{"name":"proverContractAddress","type":"address","internalType":"address"},{"name":"functionSelector","type":"bytes4","internalType":"bytes4"},{"name":"settleBlockNumber","type":"uint256","internalType":"uint256"},{"name":"settleBlockHash","type":"bytes32","internalType":"bytes32"}]}]},{"name":"","type":"string","internalType":"string"},{"name":"","type":"address","internalType":"address"}],"stateMutability":"view"},{"type":"function","name":"proof","inputs":[],"outputs":[{"name":"","type":"tuple","internalType":"struct Proof","components":[{"name":"seal","type":"tuple","internalType":"struct Seal","components":[{"name":"verifierSelector","type":"bytes4","internalType":"bytes4"},{"name":"seal","type":"bytes32[8]","internalType":"bytes32[8]"},{"name":"mode","type":"uint8","internalType":"enum ProofMode"}]},{"name":"callGuestId","type":"bytes32","internalType":"bytes32"},{"name":"length","type":"uint256","internalType":"uint256"},{"name":"callAssumptions","type":"tuple","internalType":"struct CallAssumptions","components":[{"name":"proverContractAddress","type":"address","internalType":"address"},{"name":"functionSelector","type":"bytes4","internalType":"bytes4"},{"name":"settleBlockNumber","type":"uint256","internalType":"uint256"},{"name":"settleBlockHash","type":"bytes32","internalType":"bytes32"}]}]}],"stateMutability":"pure"},{"type":"function","name":"setBlock","inputs":[{"name":"blockNo","type":"uint256","internalType":"uint256"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"setChain","inputs":[{"name":"chainId","type":"uint256","internalType":"uint256"},{"name":"blockNo","type":"uint256","internalType":"uint256"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"error","name":"FailedInnerCall","inputs":[]}];
+const zuRegistryVerifierAbi: any = [{"type":"function","name":"registerCitizen","inputs":[{"name":"proof","type":"tuple","internalType":"struct Proof","components":[{"name":"seal","type":"tuple","internalType":"struct Seal","components":[{"name":"verifierSelector","type":"bytes4","internalType":"bytes4"},{"name":"seal","type":"bytes32[8]","internalType":"bytes32[8]"},{"name":"mode","type":"uint8","internalType":"enum ProofMode"}]},{"name":"callGuestId","type":"bytes32","internalType":"bytes32"},{"name":"length","type":"uint256","internalType":"uint256"},{"name":"callAssumptions","type":"tuple","internalType":"struct CallAssumptions","components":[{"name":"proverContractAddress","type":"address","internalType":"address"},{"name":"functionSelector","type":"bytes4","internalType":"bytes4"},{"name":"settleBlockNumber","type":"uint256","internalType":"uint256"},{"name":"settleBlockHash","type":"bytes32","internalType":"bytes32"}]}]},{"name":"email","type":"string","internalType":"string"},{"name":"_citizen","type":"address","internalType":"address"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"registerCitizenVerify","inputs":[{"name":"","type":"tuple","internalType":"struct Proof","components":[{"name":"seal","type":"tuple","internalType":"struct Seal","components":[{"name":"verifierSelector","type":"bytes4","internalType":"bytes4"},{"name":"seal","type":"bytes32[8]","internalType":"bytes32[8]"},{"name":"mode","type":"uint8","internalType":"enum ProofMode"}]},{"name":"callGuestId","type":"bytes32","internalType":"bytes32"},{"name":"length","type":"uint256","internalType":"uint256"},{"name":"callAssumptions","type":"tuple","internalType":"struct CallAssumptions","components":[{"name":"proverContractAddress","type":"address","internalType":"address"},{"name":"functionSelector","type":"bytes4","internalType":"bytes4"},{"name":"settleBlockNumber","type":"uint256","internalType":"uint256"},{"name":"settleBlockHash","type":"bytes32","internalType":"bytes32"}]}]},{"name":"","type":"string","internalType":"string"}],"outputs":[{"name":"","type":"bool","internalType":"bool"}],"stateMutability":"view"},{"type":"function","name":"shiftOffset","inputs":[{"name":"data","type":"bytes","internalType":"bytes"},{"name":"shiftBy","type":"uint256","internalType":"uint256"},{"name":"offsetPosition","type":"uint256","internalType":"uint256"}],"outputs":[{"name":"","type":"bytes","internalType":"bytes"}],"stateMutability":"pure"},{"type":"function","name":"verifier","inputs":[],"outputs":[{"name":"","type":"address","internalType":"contract IProofVerifier"}],"stateMutability":"view"},{"type":"event","name":"CitizenRegistered","inputs":[{"name":"citizen","type":"address","indexed":true,"internalType":"address"},{"name":"expiration","type":"uint256","indexed":false,"internalType":"uint256"}],"anonymous":false},{"type":"event","name":"CitizenshipRevoked","inputs":[{"name":"citizen","type":"address","indexed":true,"internalType":"address"}],"anonymous":false},{"type":"event","name":"IdentityAdded","inputs":[{"name":"citizen","type":"address","indexed":true,"internalType":"address"},{"name":"identity","type":"address","indexed":false,"internalType":"address"}],"anonymous":false},{"type":"event","name":"IdentityRemoved","inputs":[{"name":"citizen","type":"address","indexed":true,"internalType":"address"},{"name":"identity","type":"address","indexed":false,"internalType":"address"}],"anonymous":false},{"type":"error","name":"InvalidChainId","inputs":[]}];
+
+const zuRegistryVerifierContract: any = "0x239EF3aa0B09551A35C6A43367cb81499d4Ba25f";
 
 const Registration = () => {
   const [account, setAccount] = useState<string | null>(null);
@@ -26,6 +29,10 @@ const Registration = () => {
   const [success, setSuccess] = useState<string | null>(null);
   const [key, setKey] = useState<string>('ethGlobal');
   const [emlFile, setEmlFile] = useState<File | null>(null);
+
+  const vlayer = createVlayerClient({
+    url: 'http://localhost:4000'
+  });
 
   const connectMetaMask = async () => {
     if (window.ethereum) {
@@ -61,33 +68,41 @@ const Registration = () => {
         reader.onerror = () => reject(reader.error);
       });
 
+      console.log('emailContent: ', emailContent);
+      console.log('before');
       const unverifiedEmail = await preverifyEmail(emailContent);
+      console.log('after');
       console.log("emailContent: ", unverifiedEmail);
 
       console.log("createVlayerClient");
-      const vlayer = createVlayerClient();
+
       
       // Wait for client initialization
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      //await new Promise(resolve => setTimeout(resolve, 1000));
       
       console.log("Vlayer client created!");
-      const prover = '0x77FC4858273f0B1aD5EBB14f5564311A16BE325d';
-      const emailProofProver = { abi: zuRegistryAbi };
-      const foundry = 534351;
+      const prover = '0xB9200A945f69Deeb19E485ab392eFF3B8575C2F3';
+      const emailProofProver = { abi: zuRegistryProverAbi };
+      const chainId = 11155420 ; // OP Sepolia
+      //const chainId = 534351; // Scroll Sepolia
 
 
-      console.log("hello");
+      console.log("address: ", prover);
+      console.log("my abi: ", emailProofProver.abi);
+      console.log("args: ", unverifiedEmail);
+      console.log("chainId: ", chainId);
       // Add targetWallet parameter to match the ABI
       const hash = await vlayer.prove({
         address: prover,
         proverAbi: emailProofProver.abi,
         functionName: 'main',
         args: [unverifiedEmail, account], // Add account as targetWallet
-        chainId: foundry,
+        chainId: chainId,
       });
       console.log("hash: ", hash);
 
       const result = await vlayer.waitForProvingResult(hash);
+
       console.log("result: ", result);
       return result;
     } catch (error) {
@@ -111,12 +126,30 @@ const Registration = () => {
     try {
       console.log("try");
       const proof: any = await generateZkProof();
+
       setZkProof(proof);
+
+      // Connect to Ethereum provider
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      await provider.send('eth_requestAccounts', []);
+      const signer = await provider.getSigner();
+      // Create contract instance
+      const contract = new ethers.Contract(zuRegistryVerifierContract, zuRegistryVerifierAbi, signer);
+      
+      // Call registerCitizen function
+      console.log("proof: ", proof);
+      console.log("account: ", account);
+      const tx = await contract.registerCitizen(proof[0], proof[1], proof[2]);
+      await tx.wait();
+      console.log(tx);
+
       setSuccess('Registration successful');
       setError(null);
+      
     } catch (err) {
       console.log("err: ", err);
       setError('Failed to generate zkProof');
+
       setSuccess(null);
     }
   };
@@ -162,7 +195,6 @@ const Registration = () => {
           </Tab>
         </Tabs>
         <hr />
-        <h3>Price to Join</h3>
         <Form onSubmit={handleSubmit}>
           <Form.Group controlId="formPrice" className="mt-3">
             <Form.Label>Price to Join (ETH)</Form.Label>

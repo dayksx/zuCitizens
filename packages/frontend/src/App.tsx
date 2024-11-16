@@ -9,6 +9,16 @@ import Registration from "./Layers/Sections/Registration";
 import Citizen from "./Layers/Sections/Citizen";
 import Census from "./Layers/Sections/Census";
 
+declare global {
+  interface Window {
+    vlayer: any;
+    ethereum: {
+      isMetaMask?: boolean;
+      request: (args: { method: string; params?: any[] }) => Promise<any>;
+    };
+  }
+}
+
 function App() {
   return (
     <Router>

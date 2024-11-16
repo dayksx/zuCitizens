@@ -1,14 +1,22 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
+import {Proof} from "vlayer-0.1.0/Proof.sol";
 import { Verifier } from "vlayer-0.1.0/Verifier.sol";
-import { ZuCitizenshipRegistryProver } from "ZuCitizenshipRegistryProver.sol";
+import { ZuCitizenshipRegistryProver } from "./ZuCitizenshipRegistryProver.sol";
 
-address constant PROVER_ADDR = address(0xd7141F4954c0B082b184542B8b3Bd00Dc58F5E05);
+address constant PROVER_ADDR = address(0xB9200A945f69Deeb19E485ab392eFF3B8575C2F3);
 bytes4 constant  PROVER_FUNC_SELECTOR = ZuCitizenshipRegistryProver.main.selector;
 
-contract ZuCitizenshipRegistry is Verifier {
+contract ZuCitizenshipRegistryVerifier is Verifier {
     // Mapping from address to Citizen struct
     mapping(address => Citizen) private citizens;
+
+        // Struct to store citizen information
+    struct Citizen {
+        bool isCitizen; // Indicates if the address is a registered citizen
+        uint256 expiration; // Timestamp when the citizenship expires
+        address[] identities; // Array of addresses representing the citizen's identities
+    }
 
     // Events to log actions
     event CitizenRegistered(address indexed citizen, uint256 expiration);
@@ -17,15 +25,21 @@ contract ZuCitizenshipRegistry is Verifier {
     event IdentityRemoved(address indexed citizen, address identity);
 
     // function for the verified citizens to register
-    function registerCitizen(Proof _p, address _citizen) external onlyVerified(PROVER_ADDR, PROVER_FUNC_SELECTOR) {
-        _registerCitizen(_citizen, block.timestamp + 2 years);
+    function registerCitizen(Proof calldata proof, string calldata email, address _citizen) external {
+        this.registerCitizenVerify(proof, email);
+        _registerCitizen(_citizen, block.timestamp + 30 days);
+    }
+
+    function registerCitizenVerify(Proof calldata, string calldata
+    ) view external onlyVerified(PROVER_ADDR, PROVER_FUNC_SELECTOR) returns (bool) {
+        return true;
     }
 
     // Function to register a new citizen
     // Only the admin can call this function
     // _citizen: Address of the new citizen
     // _expiration: Timestamp when the citizenship expires
-    function registerCitizen(address _citizen, uint256 _expiration) public {
+    function _registerCitizen(address _citizen, uint256 _expiration) private {
         require(!citizens[_citizen].isCitizen, "Citizen already registered");
         citizens[_citizen].isCitizen = true;
         citizens[_citizen].expiration = _expiration;

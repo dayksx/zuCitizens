@@ -33,15 +33,15 @@ contract ZuCitizenshipRegistry is Prover {
 
     string targetDomain;
 
-    constructor(string memory _targetDomain) {
-        targetDomain = _targetDomain;
-    }
+    // constructor(string memory _targetDomain) {
+    //     targetDomain = _targetDomain;
+    // }
 
     // TODO: verify receiver
     function main(
         UnverifiedEmail calldata unverifiedEmail,
         address targetWallet
-    ) public view returns (Proof, bytes32, address) {
+    ) public view returns (Proof memory, bytes32, address) {
         VerifiedEmail memory email = unverifiedEmail.verify();
 
         require(
