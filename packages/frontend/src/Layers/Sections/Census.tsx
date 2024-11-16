@@ -67,9 +67,7 @@ const Census = () => {
       const provider = new ethers.BrowserProvider(window.ethereum);
       await provider.send('eth_requestAccounts', []);
       
-      // Get current block number
       const currentBlock = await provider.getBlockNumber();
-      // Calculate block from 7 days ago (assuming 2s block time)
       const fromBlock = Math.max(0, currentBlock - ((7 * 24 * 60 * 60) / 2));
       
       const contract = new ethers.Contract(
@@ -78,15 +76,22 @@ const Census = () => {
         provider
       );
 
-      console.log("Fetching events from block:", fromBlock, "to", currentBlock);
-
-      // Query only recent blocks instead of entire history
-      const filter = contract.filters.CitizenRegistered();
-      const rawEvents = await contract.queryFilter(filter, fromBlock, currentBlock);
+      // Query in chunks of 2000 blocks
+      const CHUNK_SIZE = 2000;
+      let allEvents: ethers.Log[] = [];
       
-      console.log("Raw events:", rawEvents);
+      for (let start = fromBlock; start < currentBlock; start += CHUNK_SIZE) {
+        const end = Math.min(start + CHUNK_SIZE - 1, currentBlock);
+        console.log(`Fetching events from block ${start} to ${end}`);
+        
+        const filter = contract.filters.CitizenRegistered();
+        const chunk = await contract.queryFilter(filter, start, end);
+        allEvents = [...allEvents, ...chunk];
+      }
 
-      const formattedEvents = rawEvents.map(event => {
+      console.log("Raw events:", allEvents);
+
+      const formattedEvents = allEvents.map(event => {
         const typedEvent = event as unknown as CitizenRegisteredEvent;
         return {
           citizen: typedEvent.args.citizen,
