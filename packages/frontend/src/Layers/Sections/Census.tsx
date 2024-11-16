@@ -1,143 +1,207 @@
 import { ethers } from "ethers";
-import React, { useEffect, useState, useContext } from "react";
-import { Alert, Breadcrumb, Button } from "react-bootstrap";
-import Modal from 'react-bootstrap/Modal';
-import { Link, useNavigate } from "react-router-dom";
-import { useParams } from 'react-router-dom';
-import { Container, Row, Col, Card } from 'react-bootstrap';
+import React, { useEffect, useState } from "react";
+import { 
+  Alert, 
+  Button, 
+  Container, 
+  Row, 
+  Col, 
+  Card, 
+  Spinner 
+} from "react-bootstrap";
 
-interface Citizen {
-    id: number;
-    name: string;
-    registrationDate: string;
-    // Add other fields as needed
+const zuRegistryVerifierContract = "0x239EF3aa0B09551A35C6A43367cb81499d4Ba25f";
+const BLOCK_EXPLORER_URL = "https://sepolia-optimism.etherscan.io"; // OP Sepolia
+const EXPECTED_CHAIN_ID = '0xaa37dc'; // OP Sepolia chain ID (11155420 in decimal)
+
+interface CitizenEvent {
+  citizen: string;
+  expiration: string;
+}
+
+// Define the event interface
+interface CitizenRegisteredEventArgs {
+  citizen: string;
+  expiration: bigint;
+}
+
+interface CitizenRegisteredEvent extends ethers.Log {
+  args: CitizenRegisteredEventArgs;
+  eventName: string;
 }
 
 const Census = () => {
+  console.log('Census component rendered');
 
-// Replace with your contract address
-const contractAddress = '0xE6EAcd03E0aFF16010ff35a32d563Ca6331c1FF8';
+  const [events, setEvents] = useState<CitizenEvent[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-// Replace with your contract ABI
-const abi = [
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "citizen",
-                "type": "address"
-            },
-            {
-                "indexed": false,
-                "internalType": "uint256",
-                "name": "expiration",
-                "type": "uint256"
-            }
-        ],
-        "name": "CitizenRegistered",
-        "type": "event"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "_citizen",
-                "type": "address"
-            },
-            {
-                "internalType": "uint256",
-                "name": "_expiration",
-                "type": "uint256"
-            }
-        ],
-        "name": "registerCitizen",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    }
-];
-const { id } = useParams<{ id: string }>();
-const navigate = useNavigate();
-const [citizen, setCitizen] = useState<Citizen | null>(null);
-const [error, setError] = useState<string | null>(null);
-
-useEffect(() => {
-  if (!id) {
-    setError('Invalid citizen ID');
-    return;
-  }
-
-  const citizenId = parseInt(id, 10);
-  if (isNaN(citizenId)) {
-    setError('Invalid citizen ID');
-    return;
-  }
-
-  // Fetch the citizen information from your backend or smart contract
-  // This is a placeholder for the actual data fetching logic
-  const fetchCitizen = async () => {
+  const checkNetwork = async () => {
     try {
-      // Replace with actual data fetching logic
-      const fetchedCitizen: Citizen = {
-        id: citizenId,
-        name: 'Alice',
-        registrationDate: '2023-01-01',
-        // Add other fields as needed
-      };
-      setCitizen(fetchedCitizen);
-    } catch (err) {
-      setError('Failed to fetch citizen information');
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const network = await provider.getNetwork();
+      const chainId = network.chainId;
+      
+      if (chainId.toString(16) !== EXPECTED_CHAIN_ID.replace('0x', '')) {
+        throw new Error(`Please switch to OP Sepolia network (Chain ID: ${EXPECTED_CHAIN_ID})`);
+      }
+      return true;
+    } catch (err: any) {
+      setError(err.message);
+      return false;
     }
   };
 
-  fetchCitizen();
-}, [id]);
+  const fetchEvents = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-if (error) {
+      // Check network first
+      const isCorrectNetwork = await checkNetwork();
+      if (!isCorrectNetwork) {
+        return;
+      }
+      
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      await provider.send('eth_requestAccounts', []);
+      
+      // Get current block number
+      const currentBlock = await provider.getBlockNumber();
+      // Calculate block from 7 days ago (assuming 2s block time)
+      const fromBlock = Math.max(0, currentBlock - ((7 * 24 * 60 * 60) / 2));
+      
+      const contract = new ethers.Contract(
+        zuRegistryVerifierContract, 
+        ["event CitizenRegistered(address indexed citizen, uint256 expiration)"], 
+        provider
+      );
+
+      console.log("Fetching events from block:", fromBlock, "to", currentBlock);
+
+      // Query only recent blocks instead of entire history
+      const filter = contract.filters.CitizenRegistered();
+      const rawEvents = await contract.queryFilter(filter, fromBlock, currentBlock);
+      
+      console.log("Raw events:", rawEvents);
+
+      const formattedEvents = rawEvents.map(event => {
+        const typedEvent = event as unknown as CitizenRegisteredEvent;
+        return {
+          citizen: typedEvent.args.citizen,
+          expiration: new Date(Number(typedEvent.args.expiration) * 1000).toLocaleString()
+        };
+      });
+
+      setEvents(formattedEvents);
+    } catch (err: any) {
+      console.error('Error fetching events:', err);
+      // More detailed error message
+      setError(
+        `Failed to fetch citizens. ${err.message || 'Please try again.'} ` +
+        `Make sure you're connected to the correct network.`
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  const handleAddressClick = (address: string) => {
+    window.open(`${BLOCK_EXPLORER_URL}/address/${address}`, '_blank');
+  };
+
+  console.log("Rendering with events:", events); // Debug log
+  console.log("Loading state:", loading); // Debug log
+  console.log("Error state:", error); // Debug log
+
   return (
     <Container className="mt-5">
       <Row>
         <Col md={8} className="mx-auto">
-          <Alert variant="danger">{error}</Alert>
-          <Button variant="primary" onClick={() => navigate('/census')}>
-            Back to Census
-          </Button>
-        </Col>
-      </Row>
-    </Container>
-  );
-}
+          <div className="d-flex justify-content-between align-items-center mb-4">
+            <h2>Registered Citizens</h2>
+            <div>
+              <small className="text-muted d-block mb-2">
+                Network: OP Sepolia (Chain ID: {EXPECTED_CHAIN_ID})
+              </small>
+              <Button 
+                variant="outline-primary" 
+                onClick={fetchEvents}
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Spinner
+                      as="span"
+                      animation="border"
+                      size="sm"
+                      role="status"
+                      aria-hidden="true"
+                      className="me-2"
+                    />
+                    Loading...
+                  </>
+                ) : (
+                  'Refresh'
+                )}
+              </Button>
+            </div>
+          </div>
 
-if (!citizen) {
-  return (
-    <Container className="mt-5">
-      <Row>
-        <Col md={8} className="mx-auto">
-          <Alert variant="info">Loading...</Alert>
-        </Col>
-      </Row>
-    </Container>
-  );
-}
-
-  return (
-    <Container className="mt-5">
-      <Row>
-        <Col md={8} className="mx-auto">
-          <Card>
-            <Card.Body>
-              <Card.Title>Citizen Information</Card.Title>
-              <Card.Text>
-                <strong>Name:</strong> {citizen.name}
-              </Card.Text>
-              <Card.Text>
-                <strong>Registration Date:</strong> {citizen.registrationDate}
-              </Card.Text>
-              {/* Add other fields as needed */}
-            </Card.Body>
-          </Card>
+          {error && (
+            <Alert variant="danger">
+              {error}
+              {error.includes('network') && (
+                <div className="mt-2">
+                  <Button 
+                    variant="outline-danger" 
+                    size="sm"
+                    onClick={async () => {
+                      try {
+                        await window.ethereum.request({
+                          method: 'wallet_switchEthereumChain',
+                          params: [{ chainId: EXPECTED_CHAIN_ID }],
+                        });
+                        // Retry fetching events after network switch
+                        fetchEvents();
+                      } catch (err) {
+                        console.error('Failed to switch network:', err);
+                      }
+                    }}
+                  >
+                    Switch to OP Sepolia
+                  </Button>
+                </div>
+              )}
+            </Alert>
+          )}
+          
+          {!loading && events.length === 0 && (
+            <Alert variant="info">No citizens registered yet.</Alert>
+          )}
+          
+          {events.map((event, index) => (
+            <Card key={index} className="mb-3">
+              <Card.Body>
+                <Card.Title>
+                  Citizen:{' '}
+                  <span 
+                    className="text-primary" 
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => handleAddressClick(event.citizen)}
+                  >
+                    {event.citizen}
+                  </span>
+                </Card.Title>
+                <Card.Text>Expiration: {event.expiration}</Card.Text>
+              </Card.Body>
+            </Card>
+          ))}
         </Col>
       </Row>
     </Container>

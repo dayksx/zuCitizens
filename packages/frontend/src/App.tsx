@@ -25,7 +25,7 @@ function App() {
   return (
     <DynamicContextProvider
       settings={{
-        environmentId: "940ded85-9118-418c-b3d5-9292948cfaa4", // Replace with your Dynamic environment ID
+        environmentId: "940ded85-9118-418c-b3d5-9292948cfaa4",
         walletConnectors: [EthereumWalletConnectors],
       }}
     >
@@ -35,8 +35,9 @@ function App() {
           <Route path="/" element={<Community />} />
           <Route path="/community" element={<Community />} />
           <Route path="/registration" element={<Registration />} />
-          <Route path="/citizens" element={<Census />} />
+          <Route path="/census" element={<Census />} />
           <Route path="/citizen/:id" element={<Citizen />} />
+          <Route path="/info" element={<Citizen />} />
         </Routes>
       </Router>
     </DynamicContextProvider>
