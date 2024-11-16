@@ -5,6 +5,8 @@ import { Link } from "react-router-dom";
 import { Form, Button, Container, Row, Col, Alert, Card, Tabs, Tab } from 'react-bootstrap';
 import { preverifyEmail, createVlayerClient } from '@vlayer/sdk';
 import fs from 'fs';
+import { DynamicWidget } from "@dynamic-labs/sdk-react-core";
+import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 
 declare global {
   interface Window {
@@ -19,26 +21,23 @@ declare global {
 const zuRegistryAbi: any = [{"type":"function","name":"main","inputs":[{"name":"unverifiedEmail","type":"tuple","internalType":"struct UnverifiedEmail","components":[{"name":"email","type":"string","internalType":"string"},{"name":"dnsRecords","type":"string[]","internalType":"string[]"}]},{"name":"targetWallet","type":"address","internalType":"address"}],"outputs":[{"name":"","type":"tuple","internalType":"struct Proof","components":[{"name":"seal","type":"tuple","internalType":"struct Seal","components":[{"name":"verifierSelector","type":"bytes4","internalType":"bytes4"},{"name":"seal","type":"bytes32[8]","internalType":"bytes32[8]"},{"name":"mode","type":"uint8","internalType":"enum ProofMode"}]},{"name":"callGuestId","type":"bytes32","internalType":"bytes32"},{"name":"length","type":"uint256","internalType":"uint256"},{"name":"callAssumptions","type":"tuple","internalType":"struct CallAssumptions","components":[{"name":"proverContractAddress","type":"address","internalType":"address"},{"name":"functionSelector","type":"bytes4","internalType":"bytes4"},{"name":"settleBlockNumber","type":"uint256","internalType":"uint256"},{"name":"settleBlockHash","type":"bytes32","internalType":"bytes32"}]}]},{"name":"","type":"bytes32","internalType":"bytes32"},{"name":"","type":"address","internalType":"address"}],"stateMutability":"view"},{"type":"function","name":"proof","inputs":[],"outputs":[{"name":"","type":"tuple","internalType":"struct Proof","components":[{"name":"seal","type":"tuple","internalType":"struct Seal","components":[{"name":"verifierSelector","type":"bytes4","internalType":"bytes4"},{"name":"seal","type":"bytes32[8]","internalType":"bytes32[8]"},{"name":"mode","type":"uint8","internalType":"enum ProofMode"}]},{"name":"callGuestId","type":"bytes32","internalType":"bytes32"},{"name":"length","type":"uint256","internalType":"uint256"},{"name":"callAssumptions","type":"tuple","internalType":"struct CallAssumptions","components":[{"name":"proverContractAddress","type":"address","internalType":"address"},{"name":"functionSelector","type":"bytes4","internalType":"bytes4"},{"name":"settleBlockNumber","type":"uint256","internalType":"uint256"},{"name":"settleBlockHash","type":"bytes32","internalType":"bytes32"}]}]}],"stateMutability":"pure"},{"type":"function","name":"registerCitizen","inputs":[{"name":"_citizen","type":"address","internalType":"address"},{"name":"_expiration","type":"uint256","internalType":"uint256"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"setBlock","inputs":[{"name":"blockNo","type":"uint256","internalType":"uint256"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"setChain","inputs":[{"name":"chainId","type":"uint256","internalType":"uint256"},{"name":"blockNo","type":"uint256","internalType":"uint256"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"event","name":"CitizenRegistered","inputs":[{"name":"citizen","type":"address","indexed":true,"internalType":"address"},{"name":"expiration","type":"uint256","indexed":false,"internalType":"uint256"}],"anonymous":false},{"type":"event","name":"CitizenshipRevoked","inputs":[{"name":"citizen","type":"address","indexed":true,"internalType":"address"}],"anonymous":false},{"type":"event","name":"IdentityAdded","inputs":[{"name":"citizen","type":"address","indexed":true,"internalType":"address"},{"name":"identity","type":"address","indexed":false,"internalType":"address"}],"anonymous":false},{"type":"event","name":"IdentityRemoved","inputs":[{"name":"citizen","type":"address","indexed":true,"internalType":"address"},{"name":"identity","type":"address","indexed":false,"internalType":"address"}],"anonymous":false},{"type":"error","name":"FailedInnerCall","inputs":[]}];
 
 const Registration = () => {
-  const [account, setAccount] = useState<string | null>(null);
   const [price, setPrice] = useState<string>('0.01');
   const [zkProof, setZkProof] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [key, setKey] = useState<string>('ethGlobal');
   const [emlFile, setEmlFile] = useState<File | null>(null);
+  
+  const { primaryWallet, isAuthenticated } = useDynamicContext();
+  const [userAddress, setUserAddress] = useState<string | null>(null);
 
-  const connectMetaMask = async () => {
-    if (window.ethereum) {
-      try {
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        setAccount(accounts[0]);
-      } catch (err) {
-        setError('Failed to connect to MetaMask');
-      }
+  useEffect(() => {
+    if (primaryWallet) {
+      setUserAddress(primaryWallet.address);
     } else {
-      setError('MetaMask is not installed');
+      setUserAddress(null);
     }
-  };
+  }, [primaryWallet]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
@@ -75,14 +74,12 @@ const Registration = () => {
       const emailProofProver = { abi: zuRegistryAbi };
       const foundry = 534351;
 
-
       console.log("hello");
-      // Add targetWallet parameter to match the ABI
       const hash = await vlayer.prove({
         address: prover,
         proverAbi: emailProofProver.abi,
         functionName: 'main',
-        args: [unverifiedEmail, account], // Add account as targetWallet
+        args: [unverifiedEmail, userAddress], // Using userAddress from Dynamic SDK
         chainId: foundry,
       });
       console.log("hash: ", hash);
@@ -92,14 +89,14 @@ const Registration = () => {
       return result;
     } catch (error) {
       console.error("Detailed error in generateZkProof:", error);
-      throw error; // Re-throw to be caught by handleSubmit
+      throw error;
     }
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!account) {
-      setError('Please connect to MetaMask');
+    if (!isAuthenticated) {
+      setError('Please connect your wallet');
       return;
     }
 
@@ -141,49 +138,57 @@ const Registration = () => {
         <h2>Citizen Registration</h2>
         {error && <Alert variant="danger">{error}</Alert>}
         {success && <Alert variant="success">{success}</Alert>}
-        <Tabs
-          id="proof-tabs"
-          activeKey={key}
-          onSelect={(k) => setKey(k || 'ethGlobal')}
-          className="mb-3"
-        >
-          <Tab eventKey="ethGlobal" title="ETHGlobal">
-            <p>Provide proof of successfully hacking in ETHGlobal.</p>
-            <Form.Group controlId="formFile" className="mb-3">
-              <Form.Label>Upload .eml File</Form.Label>
-              <Form.Control type="file" accept=".eml" onChange={handleFileChange} />
-            </Form.Group>
-          </Tab>
-          <Tab eventKey="donation" title="Donation to Ethereum Foundation">
-            <p>Provide proof of donation to the Ethereum Foundation.</p>
-          </Tab>
-          <Tab eventKey="gitcoin" title="Gitcoin Passport">
-            <p>Provide proof of owning a Gitcoin passport.</p>
-          </Tab>
-        </Tabs>
-        <hr />
-        <h3>Price to Join</h3>
-        <Form onSubmit={handleSubmit}>
-          <Form.Group controlId="formPrice" className="mt-3">
-            <Form.Label>Price to Join (ETH)</Form.Label>
-            <Form.Control
-              type="number"
-              placeholder="Enter price"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              required
-            />
-            <Form.Text className="text-muted">
-              Recommended price: 0.01 ETH
-            </Form.Text>
-          </Form.Group>
-          <Button variant="primary" onClick={connectMetaMask} className="mt-3">
-            {account ? `Connected: ${account}` : 'Connect MetaMask'}
-          </Button>
-          <Button variant="success" type="submit" className="mt-3 ms-3">
-            Register
-          </Button>
-        </Form>
+        
+        <div className="mb-4">
+          <DynamicWidget />
+        </div>
+
+        {isAuthenticated ? (
+          <>
+            <Tabs
+              id="proof-tabs"
+              activeKey={key}
+              onSelect={(k) => setKey(k || 'ethGlobal')}
+              className="mb-3"
+            >
+              <Tab eventKey="ethGlobal" title="ETHGlobal">
+                <p>Provide proof of successfully hacking in ETHGlobal.</p>
+                <Form.Group controlId="formFile" className="mb-3">
+                  <Form.Label>Upload .eml File</Form.Label>
+                  <Form.Control type="file" accept=".eml" onChange={handleFileChange} />
+                </Form.Group>
+              </Tab>
+              <Tab eventKey="donation" title="Donation to Ethereum Foundation">
+                <p>Provide proof of donation to the Ethereum Foundation.</p>
+              </Tab>
+              <Tab eventKey="gitcoin" title="Gitcoin Passport">
+                <p>Provide proof of owning a Gitcoin passport.</p>
+              </Tab>
+            </Tabs>
+            <hr />
+            <h3>Price to Join</h3>
+            <Form onSubmit={handleSubmit}>
+              <Form.Group controlId="formPrice" className="mt-3">
+                <Form.Label>Price to Join (ETH)</Form.Label>
+                <Form.Control
+                  type="number"
+                  placeholder="Enter price"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  required
+                />
+                <Form.Text className="text-muted">
+                  Recommended price: 0.01 ETH
+                </Form.Text>
+              </Form.Group>
+              <Button variant="success" type="submit" className="mt-3">
+                Register
+              </Button>
+            </Form>
+          </>
+        ) : (
+          <Alert variant="info">Please connect your wallet to register</Alert>
+        )}
       </Col>
     </Row>
   </Container>
