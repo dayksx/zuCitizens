@@ -59,7 +59,7 @@ contract ZuCitizenshipRegistryWithAttestation is Verifier, ISPHook {
         _registerCitizen(_citizen, _expiration);
     }
     
-    // function for the contract owner to mark an address as registered citizen
+    // function for the verified citizens to register
     function registerCitizen(Proof _p, address _citizen, uint256 _expiration) external onlyVerified(PROVER_ADDR, PROVER_FUNC_SELECTOR) {
         _registerCitizen(_citizen, _expiration);
     }
