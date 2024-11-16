@@ -14,13 +14,13 @@ interface IExample {
     function exampleFunction() external returns (uint256);
 }
 
-contract zuCitizenRegistryProver is Prover {
+contract ZuCitizenshipRegistryProver is Prover {
     using Strings for string;
     using RegexLib for string;
     using AddressParser for string;
     using EmailProofLib for UnverifiedEmail;
 
-    function main(UnverifiedEmail calldata unverifiedEmail) public view returns (Proof memory, string memory) {
+    function main(UnverifiedEmail calldata unverifiedEmail, address owner) public view returns (Proof memory, string memory, address) {
         VerifiedEmail memory email = unverifiedEmail.verify();
 
         require(
@@ -28,6 +28,6 @@ contract zuCitizenRegistryProver is Prover {
             "from must be a ethglobal address"
         );
 
-        return (proof(), email.from);
+        return (proof(), email.from, owner);
     }
 }

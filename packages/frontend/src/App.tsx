@@ -11,6 +11,16 @@ import Census from "./Layers/Sections/Census";
 import { DynamicContextProvider } from "@dynamic-labs/sdk-react-core";
 import { EthereumWalletConnectors } from "@dynamic-labs/ethereum";
 
+declare global {
+  interface Window {
+    vlayer: any;
+    ethereum: {
+      isMetaMask?: boolean;
+      request: (args: { method: string; params?: any[] }) => Promise<any>;
+    };
+  }
+}
+
 function App() {
   return (
     <DynamicContextProvider
