@@ -17,8 +17,8 @@ function App() {
               <Route path="/" element={<Community />} />
               <Route path="/community" element={<Community />} />
               <Route path="/registration" element={<Registration />} />
+              <Route path="/citizens" element={<Census />} />
               <Route path="/citizen/:id" element={<Citizen />} />
-              <Route path="/census" element={<Census />} />
             </Routes>
     </Router>
   );

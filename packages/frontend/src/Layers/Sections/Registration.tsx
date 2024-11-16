@@ -6,6 +6,8 @@ import { Form, Button, Container, Row, Col, Alert, Card, Tabs, Tab } from 'react
 import { preverifyEmail, createVlayerClient } from '@vlayer/sdk';
 import fs from 'fs';
 
+const zuRegistryAbi: any = [{"type":"function","name":"main","inputs":[{"name":"unverifiedEmail","type":"tuple","internalType":"struct UnverifiedEmail","components":[{"name":"email","type":"string","internalType":"string"},{"name":"dnsRecords","type":"string[]","internalType":"string[]"}]},{"name":"targetWallet","type":"address","internalType":"address"}],"outputs":[{"name":"","type":"tuple","internalType":"struct Proof","components":[{"name":"seal","type":"tuple","internalType":"struct Seal","components":[{"name":"verifierSelector","type":"bytes4","internalType":"bytes4"},{"name":"seal","type":"bytes32[8]","internalType":"bytes32[8]"},{"name":"mode","type":"uint8","internalType":"enum ProofMode"}]},{"name":"callGuestId","type":"bytes32","internalType":"bytes32"},{"name":"length","type":"uint256","internalType":"uint256"},{"name":"callAssumptions","type":"tuple","internalType":"struct CallAssumptions","components":[{"name":"proverContractAddress","type":"address","internalType":"address"},{"name":"functionSelector","type":"bytes4","internalType":"bytes4"},{"name":"settleBlockNumber","type":"uint256","internalType":"uint256"},{"name":"settleBlockHash","type":"bytes32","internalType":"bytes32"}]}]},{"name":"","type":"bytes32","internalType":"bytes32"},{"name":"","type":"address","internalType":"address"}],"stateMutability":"view"},{"type":"function","name":"proof","inputs":[],"outputs":[{"name":"","type":"tuple","internalType":"struct Proof","components":[{"name":"seal","type":"tuple","internalType":"struct Seal","components":[{"name":"verifierSelector","type":"bytes4","internalType":"bytes4"},{"name":"seal","type":"bytes32[8]","internalType":"bytes32[8]"},{"name":"mode","type":"uint8","internalType":"enum ProofMode"}]},{"name":"callGuestId","type":"bytes32","internalType":"bytes32"},{"name":"length","type":"uint256","internalType":"uint256"},{"name":"callAssumptions","type":"tuple","internalType":"struct CallAssumptions","components":[{"name":"proverContractAddress","type":"address","internalType":"address"},{"name":"functionSelector","type":"bytes4","internalType":"bytes4"},{"name":"settleBlockNumber","type":"uint256","internalType":"uint256"},{"name":"settleBlockHash","type":"bytes32","internalType":"bytes32"}]}]}],"stateMutability":"pure"},{"type":"function","name":"registerCitizen","inputs":[{"name":"_citizen","type":"address","internalType":"address"},{"name":"_expiration","type":"uint256","internalType":"uint256"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"setBlock","inputs":[{"name":"blockNo","type":"uint256","internalType":"uint256"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"setChain","inputs":[{"name":"chainId","type":"uint256","internalType":"uint256"},{"name":"blockNo","type":"uint256","internalType":"uint256"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"event","name":"CitizenRegistered","inputs":[{"name":"citizen","type":"address","indexed":true,"internalType":"address"},{"name":"expiration","type":"uint256","indexed":false,"internalType":"uint256"}],"anonymous":false},{"type":"event","name":"CitizenshipRevoked","inputs":[{"name":"citizen","type":"address","indexed":true,"internalType":"address"}],"anonymous":false},{"type":"event","name":"IdentityAdded","inputs":[{"name":"citizen","type":"address","indexed":true,"internalType":"address"},{"name":"identity","type":"address","indexed":false,"internalType":"address"}],"anonymous":false},{"type":"event","name":"IdentityRemoved","inputs":[{"name":"citizen","type":"address","indexed":true,"internalType":"address"},{"name":"identity","type":"address","indexed":false,"internalType":"address"}],"anonymous":false},{"type":"error","name":"FailedInnerCall","inputs":[]}];
+
 const Registration = () => {
   const [account, setAccount] = useState<string | null>(null);
   const [price, setPrice] = useState<string>('0.01');
@@ -38,21 +40,23 @@ const Registration = () => {
     if (!emlFile) {
       throw new Error('No .eml file uploaded');
     }
-
     const reader = new FileReader();
     reader.readAsText(emlFile);
+    console.log("read email eml file", emlFile);
     const emailContent = await new Promise<string>((resolve, reject) => {
       reader.onload = () => resolve(reader.result as string);
       reader.onerror = () => reject(reader.error);
     });
 
     const unverifiedEmail = await preverifyEmail(emailContent);
+    console.log("emailContent: ", unverifiedEmail);
 
+    console.log("createVlayerClient");
     const vlayer = createVlayerClient();
-    const prover = '0x123'; // Replace with your prover contract address
-    const emailProofProver = { abi: [] }; // Replace with your prover contract ABI
+    console.log("Vlayer client created!");
+    const prover = '0x77FC4858273f0B1aD5EBB14f5564311A16BE325d'; // Replace with your prover contract address
+    const emailProofProver = { abi: zuRegistryAbi}; // Replace with your prover contract ABI
     const foundry = 534351; // Replace with your chain ID
-
     const hash = await vlayer.prove({
       address: prover,
       proverAbi: emailProofProver.abi,
@@ -60,9 +64,10 @@ const Registration = () => {
       args: [unverifiedEmail],
       chainId: foundry,
     });
+    console.log("hash: ", hash);
 
     const result = await vlayer.waitForProvingResult(hash);
-    console.log(result);
+    console.log("result: ", result);
     return result;
   };
 
@@ -79,7 +84,7 @@ const Registration = () => {
     }
 
     try {
-      const proof = await generateZkProof();
+      const proof: any = await generateZkProof();
       setZkProof(proof);
       setSuccess('Registration successful');
       setError(null);
